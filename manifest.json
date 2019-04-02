@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
-  "name": "Save Session",
-  "short_name": "Save Session",
-  "description": "Save Session.",
-  "version": "1.0.0",
+  "name": "Save Working Session",
+  "short_name": "Save Working Session",
+  "description": "Easy to save current working tabs and restore when you come back.",
+  "version": "1.0.1",
   "author": "matico",
   "permissions": [
     "tabs",
@@ -17,6 +17,6 @@
     "persistent": true
   },
   "browser_action":{
-    "default_icon": "icon/enable.png"
+    "default_icon": "icon/icon.png"
   }
 }

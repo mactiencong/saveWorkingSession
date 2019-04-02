@@ -13,7 +13,9 @@ function loadSavedSession(){
 (function start(){
   loadSavedSession().then(()=>{
     let isSaved = savedTabs.length>0
-    if(isSaved) setNeedUpdateBadge()
+    if(isSaved) {
+      setSavedBadge()
+    }
     chrome.browserAction.onClicked.addListener(() => {
       let isSaved = savedTabs.length>0
       return isSaved? restore(): save()
@@ -22,40 +24,34 @@ function loadSavedSession(){
 })()
 
 function save(){
-  setSavedIcon()
   setSavedBadge()
   saveAllCurrentTabsToStorage()
-  setNeedUpdate()
+  // setNeedUpdate()
 }
 
 function restore(){
-  savedTabs.forEach(tabDetail => {
-    checkTabExist(tabDetail).then(isExist=>{
-      if(!isExist) openTab(tabDetail)
+  getAllCurrentTabs().then(currentTabs=>{
+    savedTabs.forEach(savedTab => {
+      isTabExist(currentTabs, savedTab).then(isExist=>{
+        if(!isExist) openTab(savedTab)
+      })
     })
+    resetSavedSession()
+    setNormalBadge()
   })
-  resetSavedSession()
-  setNormalIcon()
-  setNormalBadge()
 }
 
-function checkTabExist(tabDetail){
+function isTabExist(currentTabs, savedTab){
   return new Promise(resolve=>{
-    chrome.tabs.query({url: tabDetail.url}, tabs => {
-      const isExist = tabs && tabs.length>0
-      resolve(isExist)
+    currentTabs.forEach(tab=>{
+      if(tab.url === savedTab.url) resolve(true)
     })
+    resolve(false)
   })
 }
 
-function openTab(tabDetail){
-  chrome.tabs.create(tabDetail)
-}
-
-function setSavedIcon(){
-  chrome.browserAction.setIcon({
-      path : "icon/enable.png"
-  })
+function openTab(savedTab){
+  chrome.tabs.create(savedTab)
 }
 
 function setSavedBadge(){
@@ -85,12 +81,6 @@ function clearsetNeedUpdateTimer(){
   }
 }
 
-function setNormalIcon(){
-  chrome.browserAction.setIcon({
-      path : "icon/disable.png"
-  })
-}
-
 function setNormalBadge(){
   chrome.browserAction.setBadgeText({text: ""})
 }
@@ -98,7 +88,6 @@ function setNormalBadge(){
 function saveAllCurrentTabsToStorage(){
   getAllCurrentTabs().then(tabs=>{
     savedTabs = tabs
-    console.log('save.savedTabs', savedTabs)
     chrome.storage.sync.set({
       savedTabs: savedTabs
     })
@@ -117,15 +106,31 @@ function getAllCurrentTabs(){
   return new Promise(resolve=>{
     chrome.tabs.query({}, tabs => {
       tabs.forEach(tab=>{
+        if(isIgnoreTab(tab)) return
         currentTabs.push({
           index: tab.index,
           url: tab.url,
           active: tab.active,
-          selected: tab.selected,
           pinned: tab.pinned
         })
       })
       resolve(currentTabs)
     })
   })
+}
+
+function isIgnoreTab(tab){
+  return isFirefoxOptionTab(tab) || isChromeBlankTab(tab)
+}
+
+function isChromeBlankTab(tab){
+  return tab.url === 'chrome://newtab/'
+}
+
+function isFirefoxBlankTab(tab){
+  return tab.url === 'about:newtab'
+}
+
+function isFirefoxOptionTab(tab){
+  return tab.url.includes('about:')
 }

@@ -3,7 +3,7 @@
   "name": "Save Working Session",
   "short_name": "Save Working Session",
   "description": "Easy to save current working tabs and restore when you come back.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "matico",
   "permissions": [
     "tabs",

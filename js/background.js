@@ -24,8 +24,9 @@ function loadSavedSession(){
 })()
 
 function save(){
-  setSavedBadge()
-  saveAllCurrentTabsToStorage()
+  saveAllCurrentTabsToStorage().then(isSaveSuccess=>{
+    if(isSaveSuccess) setSavedBadge()
+  })
   // setNeedUpdate()
 }
 
@@ -86,10 +87,17 @@ function setNormalBadge(){
 }
 
 function saveAllCurrentTabsToStorage(){
-  getAllCurrentTabs().then(tabs=>{
-    savedTabs = tabs
-    chrome.storage.sync.set({
-      savedTabs: savedTabs
+  return new Promise(resolve=>{
+    let isSaveSuccess = false
+    getAllCurrentTabs().then(tabs=>{
+      if(tabs.length>0){
+        savedTabs = tabs
+        chrome.storage.sync.set({
+          savedTabs: savedTabs
+        })
+        isSaveSuccess = true
+      }
+      return resolve(isSaveSuccess)
     })
   })
 }
@@ -120,17 +128,13 @@ function getAllCurrentTabs(){
 }
 
 function isIgnoreTab(tab){
-  return isFirefoxOptionTab(tab) || isChromeBlankTab(tab)
+  return isChromeSettingTab(tab) || isFirefoxSettingTab(tab)
 }
 
-function isChromeBlankTab(tab){
-  return tab.url === 'chrome://newtab/'
+function isChromeSettingTab(tab){
+  return tab.url.includes('chrome:')
 }
 
-function isFirefoxBlankTab(tab){
-  return tab.url === 'about:newtab'
-}
-
-function isFirefoxOptionTab(tab){
+function isFirefoxSettingTab(tab){
   return tab.url.includes('about:')
 }
